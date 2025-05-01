@@ -138,7 +138,7 @@ function show(io::IO, r::EvolutionaryOptimizationResults)
             sgn = converged(cm) ? "≤" : "≰"
             dsc = description(cm)
             lpd = " "^(maxdsclen + 1 - length(dsc))
-            print(io, "$rpd$dsc$lpd= $(diff(cm)) $sgn $(tolerance(cm))\n" )
+            !isa(cm, Never) && print(io, "$rpd$dsc$lpd= $(diff(cm)) $sgn $(tolerance(cm))\n" )
         end
         print(io, "\n")
     end

@@ -21,6 +21,7 @@ calculations.
 Evolutionary.AbsDiff
 Evolutionary.RelDiff
 Evolutionary.GD
+Evolutionary.Never
 ```
 
 ## Auxiliary Functions

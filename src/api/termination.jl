@@ -121,7 +121,7 @@ end
 GD(tol::T, inv=false) where {T<:AbstractFloat} = GD(tol, Inf, zeros(T,0,0), inv)
 GD(inv=false) = GD(1e-5, inv)
 function description(m::GD)
-    prefix = m.inverted ? "I" : "" 
+    prefix = m.inverted ? "I" : ""
     "|$(prefix)GD(P) - $(prefix)GD(P')|"
 end
 function assess!(m::GD, state::AbstractOptimizerState)
@@ -131,6 +131,16 @@ function assess!(m::GD, state::AbstractOptimizerState)
     converged(m)
 end
 
+"""
+"Never converges" metric for single objective optimization.
+
+This allows one to force the optimization algorithm to run for a given number of iterations.
+"""
+mutable struct Never <: ConvergenceMetric
+end
+description(m::Never) = "never converges (fixed number of iterations)"
+assess!(m::Never, state::AbstractOptimizerState) = false
+converged(m::Never) = false
 
 """
     spread(S,R)
