@@ -138,9 +138,9 @@ This allows one to force the optimization algorithm to run for a given number of
 """
 mutable struct Never <: ConvergenceMetric
 end
-description(m::Never) = "never converges"
+description(m::Never) = "never converges (fixed number of iterations)"
 assess!(m::Never, state::AbstractOptimizerState) = false
-
+converged(m::Never) = false
 
 """
     spread(S,R)
