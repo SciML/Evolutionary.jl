@@ -1,8 +1,9 @@
 module Evolutionary
-using LinearAlgebra, Statistics
+using LinearAlgebra: Diagonal, Symmetric, diag, diagm, eigen!, norm
+using Statistics: mean
 using Base: @kwdef
 using UnPack: @unpack
-using StackViews
+using StackViews: StackView
 using Random: AbstractRNG, default_rng, randperm, shuffle, randn!
 using NLSolversBase: NLSolversBase, AbstractObjective, ConstraintBounds,
     AbstractConstraints, nconstraints_x, nconstraints

@@ -1,27 +1,32 @@
-using Evolutionary
-using Aqua
-using JET
-using Test
+using SciMLTesting, Evolutionary, Test
 
-@testset "Quality Assurance" begin
-    @testset "Aqua" begin
-        # ambiguities, unbound_args and piracies currently fail; keep the
-        # other Aqua sub-checks running and mark the failing ones broken.
-        # Tracked in https://github.com/SciML/Evolutionary.jl/issues/145
-        Aqua.test_all(
-            Evolutionary;
-            ambiguities = false,
-            unbound_args = false,
-            piracies = false,
-        )
-        @test_broken false  # Aqua ambiguities: 18 found in optimize overloads (src/api/optimize.jl) — tracked in https://github.com/SciML/Evolutionary.jl/issues/145
-        @test_broken false  # Aqua unbound_args: 3 methods (src/api/expressions.jl) — tracked in https://github.com/SciML/Evolutionary.jl/issues/145
-        @test_broken false  # Aqua piracies: 7 methods (Expr ops, replace, value) — tracked in https://github.com/SciML/Evolutionary.jl/issues/145
-    end
-    @testset "JET" begin
-        # JET.test_package reports errors (e.g. +(::Nothing,::Int) and kwcall
-        # on deprecated crossover/mutation aliases in src/deprecated.jl).
-        # Tracked in https://github.com/SciML/Evolutionary.jl/issues/145
-        @test_broken false  # JET: report_package errors — tracked in https://github.com/SciML/Evolutionary.jl/issues/145
-    end
+run_qa(
+    Evolutionary;
+    explicit_imports = true,
+    # ambiguities, unbound_args and piracies still fail; keep them disabled and
+    # tracked. https://github.com/SciML/Evolutionary.jl/issues/145
+    aqua_broken = (
+        :ambiguities,    # 18 ambiguities in optimize overloads (src/api/optimize.jl)
+        :unbound_args,   # 3 methods (src/api/expressions.jl)
+        :piracies,       # 7 methods (Expr ops, replace, value)
+    ),
+    ei_kwargs = (;
+        # other packages' non-public names: ignore until they go public upstream.
+        all_explicit_imports_are_public = (;
+            ignore = (
+                :default_rng,     # Random (stdlib non-public)
+                :nconstraints,    # NLSolversBase non-public
+                :nconstraints_x,  # NLSolversBase non-public
+            ),
+        ),
+    ),
+)
+
+# JET surfaces method/typo errors only on Julia >= 1.12 (the QA `1` lane), while the
+# LTS lane is clean, so neither a hard JET check (fails 1.12) nor `jet_broken = true`
+# (auto-flags an Unexpected Pass on the clean LTS lane) is correct across the matrix.
+# Keep the finding tracked as a static broken placeholder.
+# https://github.com/SciML/Evolutionary.jl/issues/145
+@testset "JET" begin
+    @test_broken false  # report_package: +(::Nothing,::Int), kwcall on SPX, Evolutionary.expr (Julia >= 1.12)
 end
