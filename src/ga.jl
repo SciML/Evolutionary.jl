@@ -37,6 +37,11 @@ struct GA{T1, T2, T3, T4} <: AbstractOptimizer
         new{T1, T2, T3, T4}(populationSize, crossoverRate, mutationRate, epsilon, selection, crossover, mutation, after_op, metrics)
 end
 population_size(method::GA) = method.populationSize
+"""
+    default_options(method)
+
+Return the default optimization options for an evolutionary method.
+"""
 default_options(method::GA) = (iterations = 1000,)
 summary(m::GA) = "GA[P=$(m.populationSize),x=$(m.crossoverRate),μ=$(m.mutationRate),ɛ=$(m.ɛ)]"
 show(io::IO, m::GA) = print(io, summary(m))

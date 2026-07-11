@@ -88,4 +88,14 @@ include("selections.jl")
 @deprecate line LC
 @deprecate discrete DC
 
+@doc "Deprecated alias for [`BINX`](@ref)." uniformbin
+@doc "Deprecated alias for [`EXPX`](@ref)." exponential
+@doc "Deprecated alias for [`SPX`](@ref)." singlepoint
+@doc "Deprecated alias for [`TPX`](@ref)." twopoint
+@doc "Deprecated alias for [`BGA`](@ref)." domainrange
+@doc "Deprecated alias for [`WAX`](@ref)." waverage
+@doc "Deprecated alias for [`IC`](@ref)." intermediate
+@doc "Deprecated alias for [`LC`](@ref)." line
+@doc "Deprecated alias for [`DC`](@ref)." discrete
+
 end

@@ -1,3 +1,8 @@
+"""
+    Terminal
+
+Allowed terminal element types for tree-based genetic programming expressions.
+"""
 const Terminal = Union{Symbol, Real, Function}
 
 """
