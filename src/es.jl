@@ -59,6 +59,11 @@ mutable struct ESState{T, IT, ST} <: AbstractOptimizerState
 end
 value(s::ESState) = first(s.fitness)
 minimizer(s::ESState) = s.fittest
+"""
+    strategy(state)
+
+Return the current strategy stored in an evolution-strategy optimizer state.
+"""
 strategy(s::ESState) = first(s.strategies)
 
 """Initialization of ES algorithm state"""

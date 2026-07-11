@@ -595,6 +595,11 @@ function swap!(v::T, from::Int, to::Int) where {T <: AbstractVector}
     return v[to] = val
 end
 
+"""
+    mutationwrapper(gamutation)
+
+Wrap a genetic-algorithm mutation so it can be used as an evolution-strategy mutation.
+"""
 function mutationwrapper(gamutation::Function)
     wrapper(recombinant::T, s::S; kwargs...) where {T <: AbstractVector, S <: AbstractStrategy} = gamutation(recombinant; kwargs...)
     return wrapper

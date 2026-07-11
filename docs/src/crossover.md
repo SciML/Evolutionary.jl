@@ -35,6 +35,10 @@ UX
 BINX
 EXPX
 BSX
+singlepoint
+twopoint
+uniformbin
+exponential
 ```
 
 ### Real-valued Crossovers
@@ -50,6 +54,11 @@ HX
 LX
 MILX
 SBX
+discrete
+waverage
+intermediate
+line
+domainrange
 ```
 
 ### Combinatorial Crossovers

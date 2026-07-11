@@ -29,6 +29,7 @@ IsotropicStrategy
 IsotropicStrategy(::Integer)
 AnisotropicStrategy
 AnisotropicStrategy(::Integer)
+strategy
 ```
 
 See [Mutation](@ref) section for strategy mutation operations.

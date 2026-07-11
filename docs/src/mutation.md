@@ -35,6 +35,7 @@ The default (no-op) mutation operator simply returns the individual unchanged.
 
 ```@docs
 Evolutionary.genop(recombinant)
+mutationwrapper(::Function)
 ```
 
 ### Binary Mutations

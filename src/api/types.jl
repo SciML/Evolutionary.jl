@@ -8,6 +8,18 @@ Abstract evolutionary optimizer algorithm
 """
 abstract type AbstractOptimizer end
 
+"""
+    default_options(method)
+
+Return the default [`Options`](@ref) keyword values for an evolutionary
+optimization method.
+
+Algorithm implementations extend this function with a method for their
+optimizer type. The returned named tuple is passed to `Options` when the user
+does not provide explicit options.
+"""
+function default_options end
+
 function print_header(method::AbstractOptimizer)
     return println("Iter     Function value")
 end
@@ -169,6 +181,13 @@ end
 All evolution strategies must be derived from this type.
 """
 abstract type AbstractStrategy end
+
+"""
+    strategy(state)
+
+Return the evolution strategy associated with an optimizer state.
+"""
+function strategy end
 
 """Empty evolution strategy"""
 struct NoStrategy <: AbstractStrategy end
