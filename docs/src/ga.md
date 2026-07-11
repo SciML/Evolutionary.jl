@@ -2,6 +2,7 @@
 
 ```@docs
 GA
+default_options
 ```
 
 ## Description

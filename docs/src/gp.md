@@ -6,6 +6,7 @@ CurrentModule = Evolutionary
 
 ```@docs
 TreeGP
+Terminal
 ```
 
 ## Description

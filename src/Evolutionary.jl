@@ -78,24 +78,97 @@ include("mutations.jl")
 include("selections.jl")
 
 @deprecate uniform(v1, v2) UX(v1, v2)
-@deprecate uniformbin BINX
-@deprecate exponential EXPX
-@deprecate singlepoint SPX
-@deprecate twopoint TPX
-@deprecate domainrange BGA
-@deprecate waverage WAX
-@deprecate intermediate IC
-@deprecate line LC
-@deprecate discrete DC
+export uniformbin, exponential, singlepoint, twopoint, domainrange, waverage,
+    intermediate, line, discrete
 
-@doc "Deprecated alias for [`BINX`](@ref)." uniformbin
-@doc "Deprecated alias for [`EXPX`](@ref)." exponential
-@doc "Deprecated alias for [`SPX`](@ref)." singlepoint
-@doc "Deprecated alias for [`TPX`](@ref)." twopoint
-@doc "Deprecated alias for [`BGA`](@ref)." domainrange
-@doc "Deprecated alias for [`WAX`](@ref)." waverage
-@doc "Deprecated alias for [`IC`](@ref)." intermediate
-@doc "Deprecated alias for [`LC`](@ref)." line
-@doc "Deprecated alias for [`DC`](@ref)." discrete
+"""
+    uniformbin(args...; kwargs...)
+
+Deprecated alias for [`BINX`](@ref).
+"""
+function uniformbin(args...; kwargs...)
+    Base.depwarn("`uniformbin` is deprecated, use `BINX` instead.", :uniformbin)
+    return BINX(args...; kwargs...)
+end
+
+"""
+    exponential(args...; kwargs...)
+
+Deprecated alias for [`EXPX`](@ref).
+"""
+function exponential(args...; kwargs...)
+    Base.depwarn("`exponential` is deprecated, use `EXPX` instead.", :exponential)
+    return EXPX(args...; kwargs...)
+end
+
+"""
+    singlepoint(args...; kwargs...)
+
+Deprecated alias for [`SPX`](@ref).
+"""
+function singlepoint(args...; kwargs...)
+    Base.depwarn("`singlepoint` is deprecated, use `SPX` instead.", :singlepoint)
+    return SPX(args...; kwargs...)
+end
+
+"""
+    twopoint(args...; kwargs...)
+
+Deprecated alias for [`TPX`](@ref).
+"""
+function twopoint(args...; kwargs...)
+    Base.depwarn("`twopoint` is deprecated, use `TPX` instead.", :twopoint)
+    return TPX(args...; kwargs...)
+end
+
+"""
+    domainrange(args...; kwargs...)
+
+Deprecated alias for [`BGA`](@ref).
+"""
+function domainrange(args...; kwargs...)
+    Base.depwarn("`domainrange` is deprecated, use `BGA` instead.", :domainrange)
+    return BGA(args...; kwargs...)
+end
+
+"""
+    waverage(args...; kwargs...)
+
+Deprecated alias for [`WAX`](@ref).
+"""
+function waverage(args...; kwargs...)
+    Base.depwarn("`waverage` is deprecated, use `WAX` instead.", :waverage)
+    return WAX(args...; kwargs...)
+end
+
+"""
+    intermediate(args...; kwargs...)
+
+Deprecated alias for [`IC`](@ref).
+"""
+function intermediate(args...; kwargs...)
+    Base.depwarn("`intermediate` is deprecated, use `IC` instead.", :intermediate)
+    return IC(args...; kwargs...)
+end
+
+"""
+    line(args...; kwargs...)
+
+Deprecated alias for [`LC`](@ref).
+"""
+function line(args...; kwargs...)
+    Base.depwarn("`line` is deprecated, use `LC` instead.", :line)
+    return LC(args...; kwargs...)
+end
+
+"""
+    discrete(args...; kwargs...)
+
+Deprecated alias for [`DC`](@ref).
+"""
+function discrete(args...; kwargs...)
+    Base.depwarn("`discrete` is deprecated, use `DC` instead.", :discrete)
+    return DC(args...; kwargs...)
+end
 
 end
