@@ -24,8 +24,8 @@ using StableRNGs
     @test sum(abs, inv(X'X + r * I) * X' * Y .- reshape(Evolutionary.minimizer(result), n, n2)) ≈ 0.001 atol = 1.0e-3
 
     # using matrix individual
-    res1 = Evolutionary.optimize(linear, randn(n, n2), CMAES(μ = 100, c_1 = 0.05), opts)
-    res2 = Evolutionary.optimize(ridge, randn(n, n2), CMAES(μ = 100, c_1 = 0.05), opts)
+    res1 = Evolutionary.optimize(linear, randn(rng, n, n2), CMAES(μ = 100, c_1 = 0.05), opts)
+    res2 = Evolutionary.optimize(ridge, randn(rng, n, n2), CMAES(μ = 100, c_1 = 0.05), opts)
     @test sum(abs, inv(X'X) * X' * Y .- Evolutionary.minimizer(res1)) ≈ 0.001 atol = 1.0e-3
     @test sum(abs, inv(X'X + r * I) * X' * Y .- Evolutionary.minimizer(res2)) ≈ 0.001 atol = 1.0e-3
 
