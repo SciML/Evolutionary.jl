@@ -2,7 +2,7 @@ using SciMLTesting, Evolutionary, Test
 
 run_qa(
     Evolutionary;
-    explicit_imports = true,
+    reexports_allow = (:f_calls, :replace, :value, :value!, :value!!),
     # ambiguities, unbound_args and piracies still fail; keep them disabled and
     # tracked. https://github.com/SciML/Evolutionary.jl/issues/145
     aqua_broken = (
@@ -21,7 +21,6 @@ run_qa(
         ),
     ),
     api_docs_kwargs = (;
-        rendered = true,
         rendered_ignore = (
             :value,    # NLSolversBase reexport
             :value!,   # NLSolversBase reexport
