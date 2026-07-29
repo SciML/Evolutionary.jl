@@ -37,14 +37,15 @@ terminate(::AbstractOptimizerState)
 
 ### Reexported Objective API
 
-Evolutionary reexports the following NLSolversBase objective-access functions for use
-when implementing an optimizer state or evaluation strategy.
+Evolutionary extends and reexports the following objective-access functions for use
+with `EvolutionaryObjective` values when implementing an optimizer state or evaluation
+strategy.
 
 ```@docs
-NLSolversBase.value
-NLSolversBase.value!
-NLSolversBase.value!!
-NLSolversBase.f_calls
+Evolutionary.value
+Evolutionary.value!
+Evolutionary.value!!
+Evolutionary.f_calls
 ```
 
 ### Population

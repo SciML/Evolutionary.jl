@@ -42,8 +42,43 @@ function EvolutionaryObjective(
     return EvolutionaryObjective{TC, TF, typeof(x), Val{eval}}(f, F, :(), 0)
 end
 
+"""
+    f_calls(obj::EvolutionaryObjective)
+
+Return the number of objective evaluations performed by `obj`.
+
+# Arguments
+- `obj`: Objective wrapper whose evaluation count is queried.
+
+# Examples
+```julia
+julia> obj = EvolutionaryObjective(sum, zeros(2));
+
+julia> value!(obj, [1.0, 2.0]); f_calls(obj)
+1
+```
+"""
 f_calls(obj::EvolutionaryObjective) = obj.f_calls
 
+"""
+    value(obj::EvolutionaryObjective)
+    value(obj::EvolutionaryObjective, x)
+
+Return the cached objective value of `obj`, or evaluate the objective at `x`.
+Evaluation increments [`f_calls`](@ref).
+
+# Arguments
+- `obj`: Objective wrapper to inspect or evaluate.
+- `x`: Candidate point supplied to the wrapped objective.
+
+# Examples
+```julia
+julia> obj = EvolutionaryObjective(sum, zeros(2));
+
+julia> value(obj, [1.0, 2.0])
+3.0
+```
+"""
 value(obj::EvolutionaryObjective) = obj.F
 
 """
@@ -58,11 +93,54 @@ function value(obj::EvolutionaryObjective{TC, TF, TX, TP}, x::TX) where {TC, TF,
     return obj.f(x)::TF
 end
 
+"""
+    value!(obj::EvolutionaryObjective, x)
+    value!(obj::EvolutionaryObjective, values, population)
+
+Evaluate an `EvolutionaryObjective`, store the result in its cache, and return the
+stored value. With `values` and `population`, evaluate each population member into
+the supplied output array.
+
+# Arguments
+- `obj`: Objective wrapper to evaluate.
+- `x`: Candidate point to evaluate.
+- `values`: Preallocated output array for population evaluation.
+- `population`: Candidate points to evaluate.
+
+# Examples
+```julia
+julia> obj = EvolutionaryObjective(sum, zeros(2));
+
+julia> value!(obj, [1.0, 2.0])
+3.0
+```
+"""
 function value!(obj::EvolutionaryObjective{TC, TF, TX, TP}, x::TX) where {TC, TF, TX, TP}
     obj.F = value(obj, x)
     return obj.F
 end
 
+"""
+    value!!(obj::EvolutionaryObjective, x)
+    value!!(obj::EvolutionaryObjective, values, x)
+
+Evaluate an `EvolutionaryObjective` after copying `x` into its cached input, then
+return the objective value. Use this variant when later optimizer steps need the
+evaluated candidate retained by the objective wrapper.
+
+# Arguments
+- `obj`: Objective wrapper to evaluate and update.
+- `x`: Candidate point to cache and evaluate.
+- `values`: Workspace used by an in-place objective evaluation.
+
+# Examples
+```julia
+julia> obj = EvolutionaryObjective(sum, zeros(2));
+
+julia> value!!(obj, [1.0, 2.0])
+3.0
+```
+"""
 function value!!(obj::EvolutionaryObjective{TC, TF, TX, TP}, x::TX) where {TC, TF, TX, TP}
     copyto!(obj.x_f, x)
     return value!(obj, x)
