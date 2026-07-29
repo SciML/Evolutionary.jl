@@ -20,14 +20,6 @@ run_qa(
             ),
         ),
     ),
-    api_docs_kwargs = (;
-        rendered_ignore = (
-            :value,    # NLSolversBase reexport
-            :value!,   # NLSolversBase reexport
-            :value!!,  # NLSolversBase reexport
-            :f_calls,  # NLSolversBase reexport
-        ),
-    ),
 )
 
 # JET surfaces method/typo errors only on Julia >= 1.12 (the QA `1` lane), while the

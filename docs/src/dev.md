@@ -35,6 +35,18 @@ minimizer(::AbstractOptimizerState)
 terminate(::AbstractOptimizerState)
 ```
 
+### Reexported Objective API
+
+Evolutionary reexports the following NLSolversBase objective-access functions for use
+when implementing an optimizer state or evaluation strategy.
+
+```@docs
+NLSolversBase.value
+NLSolversBase.value!
+NLSolversBase.value!!
+NLSolversBase.f_calls
+```
+
 ### Population
 
 The evolutionary algorithms require a collection of individuals, **population**, which the algorithm constantly modifies. The population collection type must be derived from the `AbstractVector` type. Function `initial_population` is used for implementing a strategy of population collection initialization.
