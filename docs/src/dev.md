@@ -35,6 +35,19 @@ minimizer(::AbstractOptimizerState)
 terminate(::AbstractOptimizerState)
 ```
 
+### Reexported Objective API
+
+Evolutionary extends and reexports the following objective-access functions for use
+with `EvolutionaryObjective` values when implementing an optimizer state or evaluation
+strategy.
+
+```@docs
+Evolutionary.value
+Evolutionary.value!
+Evolutionary.value!!
+Evolutionary.f_calls
+```
+
 ### Population
 
 The evolutionary algorithms require a collection of individuals, **population**, which the algorithm constantly modifies. The population collection type must be derived from the `AbstractVector` type. Function `initial_population` is used for implementing a strategy of population collection initialization.
