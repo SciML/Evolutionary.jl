@@ -2,7 +2,6 @@ using Documenter, Evolutionary
 
 makedocs(
     modules = [Evolutionary],
-    doctest = false,
     clean = true,
     sitename = "Evolutionary.jl",
     pages = [
