@@ -4,6 +4,7 @@ using Statistics: mean
 using Base: @kwdef
 using UnPack: @unpack
 using StackViews: StackView
+import PrecompileTools: @compile_workload, @setup_workload
 using Random: AbstractRNG, default_rng, randperm, shuffle, randn!
 using NLSolversBase: NLSolversBase, AbstractObjective, ConstraintBounds,
     AbstractConstraints, nconstraints_x, nconstraints
@@ -169,6 +170,16 @@ Deprecated alias for [`DC`](@ref).
 function discrete(args...; kwargs...)
     Base.depwarn("`discrete` is deprecated, use `DC` instead.", :discrete)
     return DC(args...; kwargs...)
+end
+
+@setup_workload begin
+    @compile_workload begin
+        objective(x) = sum(abs2, x)
+        initial = () -> [0.25, -0.5]
+        options = Options(iterations = 2)
+        optimize(objective, initial, GA(populationSize = 4), options)
+        optimize(objective, initial, DE(populationSize = 4), options)
+    end
 end
 
 end
