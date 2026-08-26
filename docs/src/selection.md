@@ -3,7 +3,7 @@
 **Selection** is a genetic operator used in EAs for selecting potentially useful solutions from a population for later breeding.
 The EAs are stochastic search methods using the concepts of Mendelian genetics and Darwinian evolution.
 According to Darwin's evolution theory the best ones should survive and create new offspring.
-There are many methods how to select the best individuals, for example roulette wheel selection, Boltzman selection,
+There are many methods how to select the best individuals, for example roulette wheel selection, Boltzmann selection,
 tournament selection, rank selection, steady state selection and some others.
 
 ## Selection Interface
