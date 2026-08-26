@@ -1,7 +1,9 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Evolutionary = "86b6b26d-c046-49b6-aa0b-5f0f74682bd6"
+NLSolversBase = "d41bc354-129a-5804-8e4c-c37616107c6c"
 
 [compat]
 Documenter = "0.26, 1.17"
 Evolutionary = "0.11.2"
+NLSolversBase = "8"

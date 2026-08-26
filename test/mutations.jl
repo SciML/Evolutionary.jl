@@ -72,7 +72,7 @@ using StableRNGs
         Random.seed!(rng, 2)
         @test shifting([0:5;], rng = rng) == [2, 3, 4, 5, 0, 1]
         Random.seed!(rng, 2)
-        @test replace([0:9;])([0:5;], rng = rng) == [7, 1, 2, 3, 4, 9]
+        @test replacement([0:9;])([0:5;], rng = rng) == [7, 1, 2, 3, 4, 9]
 
     end
 
@@ -117,8 +117,8 @@ using StableRNGs
         end
         mut = hoist(tr)
         @testset "Hoist Mutation" for i in 1:10
-            n = length(off[i])
-            m = length(mut(off[i], rng = rng))
+            n = Evolutionary.nodes(off[i])
+            m = Evolutionary.nodes(mut(off[i], rng = rng))
             @test n >= m
         end
 
@@ -131,21 +131,17 @@ using StableRNGs
         end
         mut = shrink(tr)
         @testset "Shrink Mutation" for i in 1:10
-            n = length(off[i])
-            m = length(mut(off[i], rng = rng))
+            n = Evolutionary.nodes(off[i])
+            m = Evolutionary.nodes(mut(off[i], rng = rng))
             @test n >= m
         end
 
         # point
-        # The invariant is length(ex) == length(mex); the original `== 7` was the
-        # length on Julia 1.10 only. Julia 1.11 changed how `rand` samples from
-        # `Dict`/`KeySet`, so `rand(rng, tr, H)` yields a different tree on 1.11+
-        # even under StableRNG.
         mut = point(tr)
         Random.seed!(rng, 1)
         @testset "Point Mutation" for i in 1:10
             mex = mut(copy(ex), rng = rng)
-            @test length(ex) == length(mex)
+            @test Evolutionary.nodes(ex) == Evolutionary.nodes(mex)
             @test sum(x == y for (x, y) in zip(ex.args, mex.args)) >= 2
         end
 

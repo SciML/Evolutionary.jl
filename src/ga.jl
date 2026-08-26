@@ -59,7 +59,7 @@ minimizer(s::GAState) = s.fittest
 """Initialization of GA algorithm state"""
 function initial_state(method::GA, options, objfun, population)
     T = typeof(value(objfun))
-    N = length(first(population))
+    N = first(population) isa Expr ? nodes(first(population)) : length(first(population))
 
     # evaluate elite size and extend population
     eliteSize = isa(method.ɛ, Int) ? method.ɛ : round(Int, method.ɛ * method.populationSize)

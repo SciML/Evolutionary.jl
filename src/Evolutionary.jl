@@ -7,21 +7,20 @@ using StackViews: StackView
 import PrecompileTools: @compile_workload, @setup_workload
 using Random: AbstractRNG, default_rng, randperm, shuffle, randn!
 using NLSolversBase: NLSolversBase, AbstractObjective, ConstraintBounds,
-    AbstractConstraints, nconstraints_x, nconstraints
+    AbstractConstraints
 import NLSolversBase: f_calls, value, value!, value!!
-import Base: show, copy, minimum, summary, getproperty, rand, getindex, length,
-    copyto!, setindex!, replace
+import Base: show, copy, minimum, summary, getproperty, rand, length
 
 export AbstractStrategy, strategy, mutationwrapper,
     IsotropicStrategy, AnisotropicStrategy, NoStrategy,
-    isfeasible, BoxConstraints, apply!, penalty, penalty!, bounds,
+    isfeasible, BoxConstraints, apply!, penalty, penalty!, bounds, constraint_values,
     PenaltyConstraints, WorstFitnessConstraints, MixedTypePenaltyConstraints,
     EvolutionaryObjective, ismultiobjective, ConvergenceMetric, default_options,
     # ES mutations
     gaussian, cauchy,
     # GA mutations
     flip, bitinversion, uniform, BGA, inversion, insertion, swap2, scramble,
-    shifting, PM, MIPM, PLM, replace,
+    shifting, PM, MIPM, PLM, replacement,
     # ES recombinations
     average, marriage,
     # GA recombinations
@@ -39,9 +38,7 @@ export AbstractStrategy, strategy, mutationwrapper,
     # GP exports
     Terminal, subtree, point, hoist, shrink,
     # Optimization methods
-    ES, CMAES, GA, DE, TreeGP, NSGA2,
-    # re-export
-    value, value!, value!!, f_calls
+    ES, CMAES, GA, DE, TreeGP, NSGA2
 
 # optimize API
 include("api/types.jl")
@@ -87,9 +84,9 @@ export uniformbin, exponential, singlepoint, twopoint, domainrange, waverage,
 
 Deprecated alias for [`BINX`](@ref).
 """
-function uniformbin(args...; kwargs...)
+function uniformbin(Cr::Real = 0.5)
     Base.depwarn("`uniformbin` is deprecated, use `BINX` instead.", :uniformbin)
-    return BINX(args...; kwargs...)
+    return BINX(Cr)
 end
 
 """
@@ -97,9 +94,9 @@ end
 
 Deprecated alias for [`EXPX`](@ref).
 """
-function exponential(args...; kwargs...)
+function exponential(Cr::Real = 0.5)
     Base.depwarn("`exponential` is deprecated, use `EXPX` instead.", :exponential)
-    return EXPX(args...; kwargs...)
+    return EXPX(Cr)
 end
 
 """
@@ -107,9 +104,9 @@ end
 
 Deprecated alias for [`SPX`](@ref).
 """
-function singlepoint(args...; kwargs...)
+function singlepoint(v1::T, v2::T; rng::AbstractRNG = default_rng()) where {T <: AbstractVector}
     Base.depwarn("`singlepoint` is deprecated, use `SPX` instead.", :singlepoint)
-    return SPX(args...; kwargs...)
+    return SPX(v1, v2; rng)
 end
 
 """
@@ -117,9 +114,9 @@ end
 
 Deprecated alias for [`TPX`](@ref).
 """
-function twopoint(args...; kwargs...)
+function twopoint(v1::T, v2::T; rng::AbstractRNG = default_rng()) where {T <: AbstractVector}
     Base.depwarn("`twopoint` is deprecated, use `TPX` instead.", :twopoint)
-    return TPX(args...; kwargs...)
+    return TPX(v1, v2; rng)
 end
 
 """
@@ -127,9 +124,9 @@ end
 
 Deprecated alias for [`BGA`](@ref).
 """
-function domainrange(args...; kwargs...)
+function domainrange(valrange::Vector, m::Int = 20)
     Base.depwarn("`domainrange` is deprecated, use `BGA` instead.", :domainrange)
-    return BGA(args...; kwargs...)
+    return BGA(valrange, m)
 end
 
 """
@@ -137,9 +134,9 @@ end
 
 Deprecated alias for [`WAX`](@ref).
 """
-function waverage(args...; kwargs...)
+function waverage(weights::Vector{<:Real})
     Base.depwarn("`waverage` is deprecated, use `WAX` instead.", :waverage)
-    return WAX(args...; kwargs...)
+    return WAX(weights)
 end
 
 """
@@ -147,9 +144,9 @@ end
 
 Deprecated alias for [`IC`](@ref).
 """
-function intermediate(args...; kwargs...)
+function intermediate(d::Real = 0.0)
     Base.depwarn("`intermediate` is deprecated, use `IC` instead.", :intermediate)
-    return IC(args...; kwargs...)
+    return IC(d)
 end
 
 """
@@ -157,9 +154,9 @@ end
 
 Deprecated alias for [`LC`](@ref).
 """
-function line(args...; kwargs...)
+function line(d::Real = 0.0)
     Base.depwarn("`line` is deprecated, use `LC` instead.", :line)
-    return LC(args...; kwargs...)
+    return LC(d)
 end
 
 """
@@ -167,9 +164,9 @@ end
 
 Deprecated alias for [`DC`](@ref).
 """
-function discrete(args...; kwargs...)
+function discrete(v1::T, v2::T; rng::AbstractRNG = default_rng()) where {T <: AbstractVector}
     Base.depwarn("`discrete` is deprecated, use `DC` instead.", :discrete)
-    return DC(args...; kwargs...)
+    return DC(v1, v2; rng)
 end
 
 @setup_workload begin

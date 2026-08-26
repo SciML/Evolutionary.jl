@@ -1,4 +1,5 @@
 using Evolutionary
+using NLSolversBase: f_calls, value, value!, value!!
 using Test
 
 @testset "Evolutionary Objective" begin

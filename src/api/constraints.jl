@@ -1,11 +1,35 @@
 # Public interface for AbstractConstraints
 
 """
-    value(c::AbstractConstraints, x)
+    constraint_values(c::AbstractConstraints, x)
 
-Return a values of constraints for a variable `x` given the set of constraints in the object `c`.
+Return the nonlinear constraint-function values for candidate `x` under `c`.
+
+# Interface
+
+Custom `AbstractConstraints` implementations with nonlinear constraints must extend
+this function. Return `nothing` when no nonlinear constraint function is present.
+Otherwise, return an indexable collection ordered consistently with the constraint
+bounds returned by [`bounds`](@ref): equality values first, then inequality values.
+
+# Arguments
+
+- `c`: Constraint object being evaluated.
+- `x`: Candidate optimization variable.
+
+# Returns
+
+`nothing` for constraints without nonlinear constraint functions, or the values used
+by [`isfeasible`](@ref) and [`penalty`](@ref) to evaluate `c`.
+
+# Examples
+
+```julia
+julia> constraint_values(NoConstraints(), [1.0, 2.0])
+nothing
+```
 """
-value(c::AbstractConstraints, x) = nothing
+constraint_values(c::AbstractConstraints, x) = nothing
 
 """
     penalty(constraints, x)
@@ -36,6 +60,16 @@ Return bounds for the constraint `c`.
 bounds(c::AbstractConstraints) = error("`bounds` is not implemented for $(c).")
 
 # Auxiliary functions
+
+constraint_dimension(bounds::ConstraintBounds) = max(
+    isempty(bounds.eqx) ? 0 : maximum(bounds.eqx),
+    isempty(bounds.ineqx) ? 0 : maximum(bounds.ineqx),
+)
+
+constraint_count(bounds::ConstraintBounds) = max(
+    isempty(bounds.eqc) ? 0 : maximum(bounds.eqc),
+    isempty(bounds.ineqc) ? 0 : maximum(bounds.ineqc),
+)
 
 """
     isfeasible(bounds::ConstraintBounds, x) -> Bool
@@ -71,7 +105,7 @@ end
 
 Return `true` if point `x` is feasible, given the constraints object `c`.
 """
-isfeasible(c::AbstractConstraints, x) = isfeasible(c.bounds, x, value(c, x))
+isfeasible(c::AbstractConstraints, x) = isfeasible(bounds(c), x, constraint_values(c, x))
 
 # Implementations
 
@@ -141,7 +175,7 @@ struct PenaltyConstraints{T, F} <: AbstractConstraints
         new{T, F}(penalty, c, bounds)
 end
 PenaltyConstraints(penalty::T, bounds::ConstraintBounds{T}, cf = (x) -> nothing) where {T} =
-    PenaltyConstraints(fill(penalty, nconstraints(bounds) + nconstraints_x(bounds)), bounds, cf)
+    PenaltyConstraints(fill(penalty, constraint_count(bounds) + constraint_dimension(bounds)), bounds, cf)
 PenaltyConstraints(
     penalty::AbstractVector{T}, lx::AbstractVector{T}, ux::AbstractVector{T},
     lc::AbstractVector{T}, uc::AbstractVector{T}, cf = (x) -> nothing
@@ -159,9 +193,9 @@ PenaltyConstraints(
     cf = (x) -> nothing
 ) where {T} =
     PenaltyConstraints(one(T), ConstraintBounds(lx, ux, lc, uc), cf)
-value(c::PenaltyConstraints, x) = c.constraints(x)
+constraint_values(c::PenaltyConstraints, x) = c.constraints(x)
 bounds(c::PenaltyConstraints) = c.bounds
-penalty(c::PenaltyConstraints, x) = penalty(c.bounds, c.coef, x, value(c, x))
+penalty(c::PenaltyConstraints, x) = penalty(c.bounds, c.coef, x, constraint_values(c, x))
 function penalty!(fitness::AbstractVector{T}, c::PenaltyConstraints{T, F}, population) where {T, F}
     for (i, x) in enumerate(population)
         fitness[i] += penalty(c, x)
@@ -198,13 +232,13 @@ WorstFitnessConstraints(
     uc::AbstractVector{T}, cf = (x) -> nothing
 ) where {T} =
     WorstFitnessConstraints(ConstraintBounds(lx, ux, lc, uc), cf)
-value(c::WorstFitnessConstraints, x) = c.constraints(x)
+constraint_values(c::WorstFitnessConstraints, x) = c.constraints(x)
 apply!(c::WorstFitnessConstraints, x) = clip!(c.bounds, x)
 bounds(c::WorstFitnessConstraints) = c.bounds
 function penalty!(fitness::AbstractVector{T}, c::WorstFitnessConstraints{T, F}, population) where {T, F}
     worst = maximum(fitness)
     for (i, x) in enumerate(population)
-        cv = value(c, x)
+        cv = constraint_values(c, x)
         p = zeros(size(cv))
         if !isfeasible(c.bounds, x, cv)
             for (i, j) in enumerate(c.bounds.eqc)
@@ -230,7 +264,7 @@ struct MixedTypePenaltyConstraints{C <: AbstractConstraints} <: AbstractConstrai
     penalty::C
     types::Vector{DataType}
 end
-value(c::MixedTypePenaltyConstraints, x) = value(c.penalty, x)
+constraint_values(c::MixedTypePenaltyConstraints, x) = constraint_values(c.penalty, x)
 penalty!(fitness, c::MixedTypePenaltyConstraints, population) = penalty!(fitness, c.penalty, population)
 function apply!(c::MixedTypePenaltyConstraints, x)
     y = apply!(c.penalty, x)
@@ -261,7 +295,7 @@ function penalty(
         x, c::Union{AbstractVector{T}, Nothing} = nothing
     ) where {T}
     penalty = 0
-    xc = nconstraints_x(bounds)
+    xc = constraint_dimension(bounds)
     for (i, j) in enumerate(bounds.eqx)
         penalty += coeff[j] * (x[j] - bounds.valx[i] - eps())^2
     end

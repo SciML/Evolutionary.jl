@@ -414,12 +414,12 @@ function shifting(recombinant::T; rng::AbstractRNG = default_rng()) where {T <: 
 end
 
 """
-    replace(pool,[minchange=1])(recombinant)
+    replacement(pool; minchange = 1)(recombinant)
 
 Replacement mutation operator changes an arbitrary number, no smaller then `minchange`,
 of elements in the individual by replacing them with elements from the predefined `pool` that are not in the individual.
 """
-function replace(pool::Vector{P}; minchange = 1) where {P}
+function replacement(pool::Vector{P}; minchange = 1) where {P}
     function rplc(recombinant::T; rng::AbstractRNG = default_rng()) where {T <: AbstractVector}
         l = length(recombinant)
         p = length(pool)
@@ -482,8 +482,8 @@ Parameters:
 """
 function subtree(method::TreeGP; growth::Real = 0.0)
     function mutation(recombinant::Expr; rng::AbstractRNG = default_rng())
-        i = rand(rng, 1:(nodes(recombinant) - 1))
-        th = depth(recombinant, recombinant[i])
+        i = rand(rng, 1:(subexpression_count(recombinant) - 1))
+        th = depth(recombinant, subexpression(recombinant, i))
         maxh = if growth > 0
             rh = height(recombinant)
             mh = max(method.maxdepth, rand(rng, rh:(rh * (1 + growth))))
@@ -491,7 +491,7 @@ function subtree(method::TreeGP; growth::Real = 0.0)
         else
             method.maxdepth
         end
-        recombinant[i] = rand(rng, method, max(0, maxh - th))
+        replace_subexpression!(recombinant, rand(rng, method, max(0, maxh - th)), i)
         return recombinant
     end
     return mutation
@@ -510,8 +510,8 @@ To ensure the tree remains legal, the replacement node has the same number of ar
 """
 function point(method::TreeGP)
     function mutation(recombinant::Expr; rng::AbstractRNG = default_rng())
-        i = rand(rng, 0:(nodes(recombinant) - 1))
-        nd = recombinant[i]
+        i = rand(rng, 0:(subexpression_count(recombinant) - 1))
+        nd = subexpression(recombinant, i)
         if isa(nd, Expr)
             aty = length(nd.args) - 1
             atyfnc = filter(kv -> kv[2] == aty, method.functions)
@@ -519,7 +519,7 @@ function point(method::TreeGP)
                 nd.args[1] = atyfnc |> keys |> rand
             end
         else
-            recombinant[i] = randterm(rng, method)
+            replace_subexpression!(recombinant, randterm(rng, method), i)
         end
         return recombinant
     end
@@ -539,15 +539,15 @@ and will have a different root node [^7].
 """
 function hoist(method::TreeGP)
     function mutation(recombinant::Expr; rng::AbstractRNG = default_rng())
-        rnodes = nodes(recombinant)
+        rnodes = subexpression_count(recombinant)
         stsize = 0
         ch = recombinant
         while stsize < 2 && rnodes > 3
             i = rand(rng, 1:(rnodes - 1))
-            ch = recombinant[i]
-            stsize = length(ch)
+            ch = subexpression(recombinant, i)
+            stsize = subexpression_count(ch)
         end
-        return copyto!(recombinant, ch)
+        return copy_expression!(recombinant, ch)
     end
     return mutation
 end
@@ -565,8 +565,8 @@ As with hoist mutation, it is motivated by the desire to reduce program size [^8
 """
 function shrink(method::TreeGP)
     function mutation(recombinant::Expr; rng::AbstractRNG = default_rng())
-        i = rand(rng, 1:(nodes(recombinant) - 1))
-        recombinant[i] = randterm(rng, method)
+        i = rand(rng, 1:(subexpression_count(recombinant) - 1))
+        replace_subexpression!(recombinant, randterm(rng, method), i)
         return recombinant
     end
     return mutation

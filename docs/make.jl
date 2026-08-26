@@ -1,4 +1,4 @@
-using Documenter, Evolutionary
+using Documenter, Evolutionary, NLSolversBase
 
 makedocs(
     modules = [Evolutionary],

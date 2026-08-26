@@ -37,19 +37,22 @@ using StableRNGs
     @test tmp == gt
     @test Evolutionary.nodes(gt) < 2^(h + 1) - 1
     @test Evolutionary.height(gt) <= h
-    @test length(gt) < 2^(h + 1) - 1
     ft = rand(rng, TreeGP(pop, terms, funcs, maxdepth = 2, initialization = :full), h)
     @test Evolutionary.nodes(ft) == 2^(h + 1) - 1
     @test Evolutionary.height(ft) == h
-    @test length(ft) == 2^(h + 1) - 1
+    @test all(
+        i -> Evolutionary.subexpression(ft, i) !== nothing,
+        0:(Evolutionary.subexpression_count(ft) - 1),
+    )
+    @test_throws BoundsError Evolutionary.subexpression(ft, Evolutionary.subexpression_count(ft))
     @test Evolutionary.depth(ft, :x) == 4
-    ft[3] = :z
-    @test Evolutionary.depth(ft, :z) == 4
+    Evolutionary.replace_subexpression!(ft, :z, 3)
+    @test Evolutionary.subexpression(ft, 3) == :z
     @test Evolutionary.depth(ft, ft) == 0
-    @test Evolutionary.depth(ft, ft[3]) > 0
+    @test Evolutionary.depth(ft, Evolutionary.subexpression(ft, 3)) > 0
     @test Evolutionary.depth(ft, :w) == -1
     @test Evolutionary.evaluate(:y, Dict(:y => 1, :z => 2), 1.0, 2.0) == 1.0
-    copyto!(ft, gt)
+    Evolutionary.copy_expression!(ft, gt)
     @test ft == gt
     @test Evolutionary.symbols(ft) |> sort == [:x, :y]
 

@@ -105,7 +105,7 @@ function initial_population(
         rng::AbstractRNG = default_rng()
     ) where {M <: AbstractOptimizer}
     n = population_size(method)
-    cn = nconstraints_x(bounds)
+    cn = constraint_dimension(bounds)
     indv = rand(rng, cn, n)
     if length(bounds.eqx) > 0
         indv[bounds.eqx, :] .= bounds.valx
