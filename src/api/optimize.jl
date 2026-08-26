@@ -12,12 +12,12 @@ or generated from the constraints `constr`, with the options `opts`.
 - For multi-objective optimization, the objective value `F` *must* be provided.
 """
 optimize(
-    f::TC, individual, method::M,
+    f::TC, individual::Individual, method::M,
     opts::Options = Options(; default_options(method)...)
 ) where {TC, M <: AbstractOptimizer} =
     optimize(f::TC, NoConstraints(), individual, method, opts)
 optimize(
-    f, F::AbstractVector, individual, method::M,
+    f, F::AbstractVector, individual::Individual, method::M,
     opts::Options = Options(; default_options(method)...)
 ) where {M <: AbstractOptimizer} =
     optimize(f, F, NoConstraints(), individual, method, opts)
@@ -27,9 +27,9 @@ optimize(
 ) where {TC, M <: AbstractOptimizer} =
     optimize(f, BoxConstraints(bounds), method, opts)
 optimize(
-    f::TC, F::TF, bounds::ConstraintBounds, method::M,
+    f::TC, F::AbstractVector, bounds::ConstraintBounds, method::M,
     opts::Options = Options(; default_options(method)...)
-) where {TC, TF, M <: AbstractOptimizer} =
+) where {TC, M <: AbstractOptimizer} =
     optimize(f, F, BoxConstraints(bounds), method, opts)
 function optimize(
         f::TC, constraints::C, method::M,
@@ -39,23 +39,23 @@ function optimize(
     return optimize(f, constraints, method, population, opts)
 end
 function optimize(
-        f::TC, F::TF, constraints::C, method::M,
+        f::TC, F::AbstractVector, constraints::C, method::M,
         opts::Options = Options(; default_options(method)...)
-    ) where {TC, TF, M <: AbstractOptimizer, C <: AbstractConstraints}
+    ) where {TC, M <: AbstractOptimizer, C <: AbstractConstraints}
     population = initial_population(method, bounds(constraints), rng = opts.rng)
     return optimize(f, F, constraints, method, population, opts)
 end
 function optimize(
-        f::TC, constraints::C, individual, method::M,
+        f::TC, constraints::C, individual::Individual, method::M,
         opts::Options = Options(; default_options(method)...)
     ) where {TC, M <: AbstractOptimizer, C <: AbstractConstraints}
     population = initial_population(method, individual, rng = opts.rng)
     return optimize(f, constraints, method, population, opts)
 end
 function optimize(
-        f::TC, F::TF, constraints::C, individual, method::M,
+        f::TC, F::AbstractVector, constraints::C, individual::Individual, method::M,
         opts::Options = Options(; default_options(method)...)
-    ) where {TC, TF, M <: AbstractOptimizer, C <: AbstractConstraints}
+    ) where {TC, M <: AbstractOptimizer, C <: AbstractConstraints}
     population = initial_population(method, individual, rng = opts.rng)
     return optimize(f, F, constraints, method, population, opts)
 end
@@ -68,9 +68,9 @@ function optimize(
     return optimize(objfun, constraints, method, population, opts)
 end
 function optimize(
-        f::TC, F::TF, constraints::C, method::M, population,
+        f::TC, F::AbstractVector, constraints::C, method::M, population,
         opts::Options = Options(; default_options(method)...)
-    ) where {TC, TF, M <: AbstractOptimizer, C <: AbstractConstraints}
+    ) where {TC, M <: AbstractOptimizer, C <: AbstractConstraints}
     @assert length(population) > 0 "Population is empty"
     objfun = EvolutionaryObjective(f, first(population), F; eval = opts.parallelization)
     return optimize(objfun, constraints, method, population, opts)

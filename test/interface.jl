@@ -1,4 +1,5 @@
 using Evolutionary
+using NLSolversBase: f_calls, value, value!, value!!
 using Test
 include("types.jl")
 
@@ -8,7 +9,7 @@ include("types.jl")
     # SETUP #
     #########
 
-    using Evolutionary: value!, f_calls, BoxConstraints, PenaltyConstraints,
+    using Evolutionary: BoxConstraints, PenaltyConstraints,
         EvolutionaryObjective
 
     # objective function
@@ -151,13 +152,13 @@ include("types.jl")
     c = Evolutionary.NoConstraints()
     @test isfeasible(c, 1)
     @test isa(c.bounds, Evolutionary.ConstraintBounds)
-    @test value(c, 1) === nothing
+    @test constraint_values(c, 1) === nothing
     @test apply!(c, 1) == 1
     @test penalty(c, 1) == 0
 
     c = BoxConstraints(lb, ub)
     @test isfeasible(c, [0, 1, 2, 0])
-    @test value(c, [1, 4, 2, -2]) === nothing
+    @test constraint_values(c, [1, 4, 2, -2]) === nothing
     @test apply!(c, [1, 4, 2, -2]) == [0, 3, 2, -1]
     @test penalty(c, [1, 4, 2, -2]) == 0
 
@@ -170,11 +171,24 @@ include("types.jl")
     @test !isfeasible(c, y) # not feasible
     @test apply!(c, x) == x
     @test apply!(c, y) == y
-    @test value(c, x) == [sum(x)]
-    @test value(c, y) == [sum(y)]
+    @test constraint_values(c, x) == [sum(x)]
+    @test constraint_values(c, y) == [sum(y)]
     @test penalty(c, x) == 0.0 # c penalty
     @test penalty(c, y) == 1 + 2^2 + 1.0 # c penalty
     @test penalty!([1, 2], c, [x, y]) == [1, 2 + penalty(c, y)]
+
+    struct GenericConstraint <: Evolutionary.AbstractConstraints
+        constraint_bounds::Evolutionary.ConstraintBounds{Float64}
+    end
+    Evolutionary.bounds(c::GenericConstraint) = c.constraint_bounds
+    Evolutionary.constraint_values(::GenericConstraint, x) = [sum(x)]
+
+    generic_constraint = GenericConstraint(
+        Evolutionary.ConstraintBounds(Float64[], Float64[], [1.0], [1.0])
+    )
+    @test Evolutionary.constraint_values(generic_constraint, [1.0, 0.0]) == [1.0]
+    @test Evolutionary.isfeasible(generic_constraint, [1.0, 0.0])
+    @test !Evolutionary.isfeasible(generic_constraint, [0.0, 0.0])
 
 
     ############

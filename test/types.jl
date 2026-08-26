@@ -1,6 +1,7 @@
 using Evolutionary
+import NLSolversBase: value, value!
 using Test
-import Evolutionary: value, population_size, default_options, minimizer,
+import Evolutionary: population_size, default_options, minimizer,
     initial_state, update_state!
 
 # mock state

@@ -620,11 +620,12 @@ Perform an arbitrary subtree swap between the expressions `t1` and `t2`.
 """
 function crosstree(t1::Expr, t2::Expr; rng::AbstractRNG = default_rng())
     tt1, tt2 = copy(t1), copy(t2)
-    i, j = rand(rng, 1:(nodes(t1) - 1)), rand(rng, 1:(nodes(t2) - 1))
-    ex1 = tt1[i]
-    ex2 = tt2[j]
-    tt1[i] = ex2
-    tt2[j] = ex1
+    i, j = rand(rng, 1:(subexpression_count(t1) - 1)),
+        rand(rng, 1:(subexpression_count(t2) - 1))
+    ex1 = subexpression(tt1, i)
+    ex2 = subexpression(tt2, j)
+    replace_subexpression!(tt1, ex2, i)
+    replace_subexpression!(tt2, ex1, j)
     return tt1, tt2
 end
 

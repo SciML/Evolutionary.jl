@@ -113,7 +113,7 @@ results = Evolutionary.optimize(f, con, x0, ga)
 ## [Auxiliary Functions](@id cons_aux_funcs)
 
 ```@docs
-value(c::Evolutionary.AbstractConstraints, x)
+constraint_values(c::Evolutionary.AbstractConstraints, x)
 isfeasible
 penalty
 penalty!

@@ -143,7 +143,7 @@ function initial_state(method::TreeGP, options, objfun, population)
     return GPState(ga, gas)
 end
 
-function update_state!(objfun, constraints, state::GPState, population::AbstractVector{IT}, method, options, itr) where {IT}
+function update_state!(objfun, constraints, state::GPState, population::AbstractVector{IT}, method::TreeGP, options, itr) where {IT}
     # perform GA step
     res = update_state!(objfun, constraints, state.state, population, state.optimizer, options, itr)
     # simplify expressions

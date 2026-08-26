@@ -26,26 +26,26 @@ initial_state
 
 ### State
 
-Every optimization algorithm have to implement a state type derived from `AbstractOptimizerState` type, e.g. `struct AlgoState <: AbstractOptimizerState end`. All derived types should implement `value` and `minimizer` functions
+Every optimization algorithm must implement a state type derived from `AbstractOptimizerState`, for example `struct AlgoState <: AbstractOptimizerState end`. Derived types implement `NLSolversBase.value` and `minimizer`.
 
 ```@docs
 AbstractOptimizerState
-value(::AbstractOptimizerState)
+NLSolversBase.value(::AbstractOptimizerState)
 minimizer(::AbstractOptimizerState)
 terminate(::AbstractOptimizerState)
 ```
 
-### Reexported Objective API
+### Objective API
 
-Evolutionary extends and reexports the following objective-access functions for use
-with `EvolutionaryObjective` values when implementing an optimizer state or evaluation
-strategy.
+Evolutionary extends the following NLSolversBase functions for use with
+`EvolutionaryObjective` values when implementing an optimizer state or evaluation
+strategy. Import them from NLSolversBase rather than from Evolutionary.
 
 ```@docs
-Evolutionary.value
-Evolutionary.value!
-Evolutionary.value!!
-Evolutionary.f_calls
+NLSolversBase.value
+NLSolversBase.value!
+NLSolversBase.value!!
+NLSolversBase.f_calls
 ```
 
 ### Population
@@ -74,6 +74,7 @@ should be implemented.
 Following auxiliary functions are available for every derived type of `AbstractConstraints`.
 
 ```@docs
+constraint_values
 isfeasible(::AbstractConstraints, x)
 ```
 

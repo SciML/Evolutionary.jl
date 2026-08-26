@@ -10,7 +10,7 @@ function Expression(ex::Expr)
     return Expression(ex, syms)
 end
 show(io::IO, e::Expression) = infix(io, e.expr)
-(e::Expression)(vals::T...) where {T} = evaluate(e.expr, e.syms, vals...)
+(e::Expression)(vals...) = evaluate(e.expr, e.syms, vals...)
 
 function symbols(ex::Expr)
     syms = Symbol[]
@@ -28,7 +28,8 @@ end
 
 height(ex) = isa(ex, Expr) ? maximum(height(e) for e in ex.args) + 1 : 0
 nodes(ex) = !isa(ex, Expr) ? 1 : length(ex.args) > 0 ? sum(nodes(e) for e in ex.args) : 0
-length(ex) = nodes(ex)
+subexpression_count(ex) =
+    !isa(ex, Expr) ? 1 : 1 + sum(subexpression_count(e) for e in ex.args[2:end])
 
 function depth(root, ex; d = 0)
     return if root == ex
@@ -40,7 +41,7 @@ function depth(root, ex; d = 0)
     end
 end
 
-function copyto!(dst::Expr, src::Expr)
+function copy_expression!(dst::Expr, src::Expr)
     dst.head = src.head
     dst.args = deepcopy(src.args)
     return dst
@@ -48,36 +49,58 @@ end
 
 function randsubexpr(ex)
     !isa(ex, Expr) && return ex
-    csize = map(nodes, ex.args[2:end])
+    csize = map(subexpression_count, ex.args[2:end])
     cidx = rand(1:(sum(csize) + 1)) - 1
     return if cidx == 0
         ex
     else
-        nidx = findfirst(i -> cidx <= i, cumsum(csize))
+        nidx = something(
+            findfirst(i -> cidx <= i, cumsum(csize)),
+            throw(ArgumentError("expression subtree index is invalid"))
+        )
         randsubexpr(ex.args[nidx + 1])
     end
 end
 
-function getindex(ex::Expr, idx::Int)
-    return if idx == 0
-        ex
-    else
-        csize = cumsum(map(nodes, ex.args[2:end]))
-        nidx = findfirst(i -> i >= idx, csize)
-        nex = ex.args[nidx + 1]
-        !isa(nex, Expr) ? nex : nex[csize[nidx] - idx]
+function subexpression(ex::Expr, idx::Int)
+    idx < 0 && throw(BoundsError(ex, idx))
+    counter = Ref(0)
+
+    function find_subexpression(node)
+        counter[] == idx && return true, node
+        counter[] += 1
+        node isa Expr || return false, nothing
+        for child in node.args[2:end]
+            found, subex = find_subexpression(child)
+            found && return true, subex
+        end
+        return false, nothing
     end
+
+    found, subex = find_subexpression(ex)
+    found || throw(BoundsError(ex, idx))
+    return subex
 end
 
-function setindex!(ex::Expr, subex, idx::Int)
-    csize = cumsum(map(nodes, ex.args[2:end]))
-    nidx = findfirst(i -> i >= idx, csize)
-    nex = ex.args[nidx + 1]
-    return if !isa(nex, Expr) || csize[nidx] - idx == 0
-        ex.args[nidx + 1] = subex
-    else
-        nex[csize[nidx] - idx] = subex
+function replace_subexpression!(ex::Expr, subex, idx::Int)
+    idx <= 0 && throw(BoundsError(ex, idx))
+    counter = Ref(0)
+
+    function replace_in_children!(node::Expr)
+        for i in 2:length(node.args)
+            counter[] += 1
+            if counter[] == idx
+                node.args[i] = subex
+                return true
+            elseif node.args[i] isa Expr && replace_in_children!(node.args[i])
+                return true
+            end
+        end
+        return false
     end
+
+    replace_in_children!(ex) || throw(BoundsError(ex, idx))
+    return ex
 end
 
 isnum(ex) = isa(ex, Number)
@@ -89,7 +112,7 @@ issym(ex) = isa(ex, Symbol)
 isexprsym(ex) = isexpr(ex) || issym(ex)
 isbinexpr(ex) = isexpr(ex) && length(ex.args) == 3
 
-function evaluate(ex::Expr, psyms::Dict{Symbol, Int}, vals::T...)::T where {T}
+function evaluate(ex::Expr, psyms::Dict{Symbol, Int}, vals...)
     exprm = ex.args
     exvals = (isexpr(nex) || issym(nex) ? evaluate(nex, psyms, vals...) : nex for nex in exprm[2:end])
     return try
@@ -100,12 +123,12 @@ function evaluate(ex::Expr, psyms::Dict{Symbol, Int}, vals::T...)::T where {T}
     end
 end
 
-function evaluate(ex::Symbol, psyms::Dict{Symbol, Int}, vals::T...)::T where {T}
+function evaluate(ex::Symbol, psyms::Dict{Symbol, Int}, vals...)
     pidx = get(psyms, ex, 0)
     if pidx == 0
         @error "Undefined symbol: $ex"
     end
-    return T(vals[pidx])
+    return vals[pidx]
 end
 
 function simplifyunary!(root)
@@ -310,7 +333,7 @@ show(io::IO, ::MIME"text/html", e::Expression) = infix(io, e.expr)
 latex(io::IO, root::Number; digits = 3) = print(io, round(root, digits = digits))
 latex(io::IO, root::Symbol; kwargs...) = print(io, root)
 function latex(io::IO, root::Expr; digits = 3)
-    root.head != :call && print(io, expr)
+    root.head != :call && return print(io, root)
     return if root.args[1] == (/)
         print(io, "\\frac{")
         latex(io, root.args[2], digits = digits)

@@ -119,7 +119,7 @@ minimum(::OptimizationResults)
 iterations(::OptimizationResults)
 iteration_limit_reached(::OptimizationResults)
 trace(::OptimizationResults)
-f_calls(::OptimizationResults)
+NLSolversBase.f_calls(::OptimizationResults)
 abstol(::OptimizationResults)
 reltol(::OptimizationResults)
 ```
