@@ -13,7 +13,7 @@ SymPy = "24249f21-da20-56a4-8eb1-6a02cf4ae2e6"
 
 [compat]
 Distributions = "0.25.125"
-Evolutionary = "0.11.2"
+Evolutionary = "0.11.2, 0.12"
 Flux = "0.16.10"
 IJulia = "1.34.4"
 MLDatasets = "0.7.21"
