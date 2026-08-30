@@ -89,8 +89,8 @@ using StableRNGs
         @test all(i -> i ∈ col, idxs)
         @test all(
             let idxs = randomoffset(col, N, rng = rng)
-                    let l = (idxs[1] - 1 + N) % 10
-                        idxs[N] == (l == 0 ? 10 : l)
+                let l = (idxs[1] - 1 + N) % 10
+                    idxs[N] == (l == 0 ? 10 : l)
                 end
             end for i in 1:100
         )
