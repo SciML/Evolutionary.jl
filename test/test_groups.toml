@@ -12,6 +12,12 @@
 versions = ["1"]
 os = ["ubuntu-latest", "windows-latest", "macOS-15-intel", "macOS-latest"]
 
+["Core 32-bit"]
+group = "Core"
+versions = ["1"]
+os = ["ubuntu-latest"]
+arch = "x86"
+
 [CoreLTSPre]
 versions = ["lts", "pre"]
 os = ["ubuntu-latest"]
