@@ -1,30 +1,39 @@
-using BenchmarkTools
-using Evolutionary
-using Random
-Random.seed!(2);
+using Evolutionary, BenchmarkTools
+using StableRNGs
 
+const SUITE = BenchmarkGroup()
+const rng = StableRNG(123)
+
+# Rastrigin-like multimodal objective
+function rastrigin(x)
+    return 10 * length(x) + sum(abs2, x) - 10 * sum(cos.(2π .* x))
+end
 rosenbrock(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
 
-N = 3
-cmaes = CMAES(; mu = 20, lambda = 100)
-ga = GA(populationSize = 100, ɛ = 0.1, selection = rouletteinv, crossover = intermediate(0.25), mutation = domainrange(fill(0.5, N)))
-es = ES(initStrategy = IsotropicStrategy(N), recombination = average, srecombination = average, mutation = gaussian, smutation = gaussian, μ = 10, ρ = 3, λ = 100, selection = :plus)
-de = DE(populationSize = 100)
+x0 = rand(rng, 10)
+bounds = Evolutionary.BoxConstraints(fill(-5.0, 10), fill(5.0, 10))
 
-suite = BenchmarkGroup()
+opts(iter) = Evolutionary.Options(; iterations = iter, abstol = 1.0e-12)
 
-suite["methods"] = BenchmarkGroup(["ga", "cmaes", "es", "de"])
-suite["methods"]["cmaes"] = @benchmarkable Evolutionary.optimize(rosenbrock, randn($N), $cmaes)
-suite["methods"]["ga"] = @benchmarkable Evolutionary.optimize(rosenbrock, randn($N), $ga)
-suite["methods"]["es"] = @benchmarkable Evolutionary.optimize(rosenbrock, randn($N), $es)
-suite["methods"]["de"] = @benchmarkable Evolutionary.optimize(rosenbrock, randn($N), $de)
+# =============================================================================
+# Optimizers
+# =============================================================================
 
-# parameters
-loadparams!(suite, BenchmarkTools.load("bmsetup.json")[1], :evals, :samples);
-# tune!(suite);
-# BenchmarkTools.save("bmsetup.json", params(suite));
-# exit()
+SUITE["optimize"] = BenchmarkGroup()
 
-# benchmark
-results = run(suite, verbose = true)
-BenchmarkTools.save("results.json", results)
+SUITE["optimize"]["ga"] = @benchmarkable Evolutionary.optimize(
+    $rastrigin, $bounds, $x0, GA(),
+    $(Evolutionary.Options(; iterations = 200))
+)
+SUITE["optimize"]["cmaes"] = @benchmarkable Evolutionary.optimize(
+    $rastrigin, $x0, CMAES(; μ = 10, λ = 20),
+    $(Evolutionary.Options(; iterations = 200))
+)
+SUITE["optimize"]["de"] = @benchmarkable Evolutionary.optimize(
+    $rastrigin, $bounds, DE(; n = 20),
+    $(Evolutionary.Options(; iterations = 200))
+)
+SUITE["optimize"]["es"] = @benchmarkable Evolutionary.optimize(
+    $rosenbrock, [0.5, 0.5], ES(; μ = 10, ρ = 1, λ = 20),
+    $(Evolutionary.Options(; iterations = 200))
+)
