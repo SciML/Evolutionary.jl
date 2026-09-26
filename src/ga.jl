@@ -84,7 +84,7 @@ function update_state!(objfun, constraints, state, parents::AbstractVector{IT}, 
     populationSize = method.populationSize
     rng = options.rng
 
-    # create an offspring popultation
+    # create an offspring population
     offspring = similar(parents)
 
     # select offspring
