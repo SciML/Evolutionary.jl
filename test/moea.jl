@@ -70,7 +70,8 @@ using StableRNGs
         # White-box: run one deterministic update_state! step (identity
         # operators, fixed selection) and compare the survivors written into
         # `parents` against an independently recomputed crowded-comparison
-        # oracle over the recorded combined fitness. Parents are chosen so the
+        # oracle over the combined fitness (parents before the step +
+        # offspring left in `state.offspring`). Parents are chosen so the
         # first front (6 members after duplication) exceeds populationSize (5),
         # forcing the truncation branch, with front indices that differ from
         # their positions inside the front.
@@ -83,6 +84,7 @@ using StableRNGs
             mutationRate = 0.0, selection = sel_first
         )
         parents2 = [[0.5], [1.0], [1.5], [-0.5], [-1.0]]
+        parents_before = deepcopy(parents2)
         objfun = Evolutionary.EvolutionaryObjective(f2, first(parents2))
         state = Evolutionary.initial_state(method, opts2, objfun, parents2)
         Evolutionary.update_state!(
@@ -90,13 +92,15 @@ using StableRNGs
             parents2, method, opts2, 1
         )
 
-        # oracle: fronts + crowding recomputed fresh from the combined fitness
+        # oracle: fronts + crowding recomputed from the combined population
+        # that selection saw (pre-step parents + this step's offspring)
+        combined = hcat(f2.(parents_before)..., f2.(state.offspring)...)
         n2 = 2 * method.populationSize
         rks2 = zeros(Int, n2)
         cd2 = zeros(Float64, n2)
-        F2 = Evolutionary.nondominatedsort!(rks2, state.fitpop)
+        F2 = Evolutionary.nondominatedsort!(rks2, combined)
         @test length(F2[1]) > method.populationSize  # truncation branch exercised
-        Evolutionary.crowding_distance!(cd2, state.fitpop, F2)
+        Evolutionary.crowding_distance!(cd2, combined, F2)
         expected = Int[]
         for fr in F2
             if length(expected) + length(fr) > method.populationSize
@@ -112,8 +116,57 @@ using StableRNGs
         # survivors (written into parents2) must match the oracle selection,
         # compared as fitness multisets
         survivors_fit = sort([f2(p) for p in parents2])
-        expected_fit = sort([state.fitpop[:, i] for i in expected])
+        expected_fit = sort([combined[:, i] for i in expected])
         @test survivors_fit == expected_fit
+    end
+
+    # Regression: survivor genomes and their objective / rank / crowding
+    # metadata must stay aligned after update_state! (issue #174)
+    @testset "NSGA-II survivor metadata stays aligned with parents" begin
+        f2(x::AbstractVector) = [x[1]^2, (x[1] - 2)^2]
+        sel_first(fit, N; kwargs...) = collect(1:N)
+        rng3 = StableRNG(123)
+        opts3 = Evolutionary.Options(rng = rng3)
+        N = 5
+        method = NSGA2(
+            populationSize = N, crossoverRate = 0.0,
+            mutationRate = 0.0, selection = sel_first
+        )
+        parents3 = [[0.5], [1.0], [1.5], [-0.5], [-1.0]]
+        parents_before = deepcopy(parents3)
+        objfun = Evolutionary.EvolutionaryObjective(f2, first(parents3))
+        state = Evolutionary.initial_state(method, opts3, objfun, parents3)
+        Evolutionary.update_state!(
+            objfun, Evolutionary.NoConstraints(), state,
+            parents3, method, opts3, 1
+        )
+
+        # every parent slot's stored objective must match its genome
+        for i in 1:N
+            @test state.fitpop[:, i] == f2(parents3[i])
+        end
+
+        # independently recompute ranks / crowding on the combined population
+        # that selection used, then check the survivor permutation
+        combined = hcat(f2.(parents_before)..., f2.(state.offspring)...)
+        rks = zeros(Int, 2N)
+        cd = zeros(Float64, 2N)
+        F = Evolutionary.nondominatedsort!(rks, combined)
+        Evolutionary.crowding_distance!(cd, combined, F)
+        expected = Int[]
+        for fr in F
+            if length(expected) + length(fr) > N
+                order = sortperm(view(cd, fr), rev = true)
+                append!(expected, fr[order[1:(N - length(expected))]])
+                break
+            else
+                append!(expected, fr)
+            end
+        end
+        @test length(expected) == N
+        @test state.fitpop[:, 1:N] == combined[:, expected]
+        @test state.ranks[1:N] == rks[expected]
+        @test state.crowding[1:N] == cd[expected]
     end
 
 end

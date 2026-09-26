@@ -113,8 +113,16 @@ function update_state!(objfun, constraints, state, parents::AbstractVector{IT}, 
     # and keep their fitness
     state.fitness = state.fitpop[:, fidx]
 
-    # construct new parent population
+    # construct new parent population, keeping objective values / ranks /
+    # crowding distances aligned with the survivor genomes (temporary copies
+    # so the in-place assignments cannot alias overlapping views)
     parents .= state.population[fitidx]
+    fitkeep = state.fitpop[:, fitidx]
+    rankkeep = state.ranks[fitidx]
+    crowdkeep = state.crowding[fitidx]
+    state.fitpop[:, 1:populationSize] .= fitkeep
+    state.ranks[1:populationSize] .= rankkeep
+    state.crowding[1:populationSize] .= crowdkeep
 
     return false
 end
