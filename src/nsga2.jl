@@ -115,6 +115,10 @@ function update_state!(objfun, constraints, state, parents::AbstractVector{IT}, 
 
     # construct new parent population
     parents .= state.population[fitidx]
+    # keep the parents' objective values, ranks and crowding distances aligned with them
+    state.fitpop[:, 1:populationSize] .= state.fitpop[:, fitidx]
+    state.ranks[1:populationSize] .= state.ranks[fitidx]
+    state.crowding[1:populationSize] .= state.crowding[fitidx]
 
     return false
 end
