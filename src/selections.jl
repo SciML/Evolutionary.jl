@@ -1,4 +1,4 @@
-# GA seclections
+# GA selections
 # ==============
 
 """
