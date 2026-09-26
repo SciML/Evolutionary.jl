@@ -116,4 +116,79 @@ using StableRNGs
         @test survivors_fit == expected_fit
     end
 
+    # Regression: update_state! must reorder fitpop/ranks/crowding with the
+    # survivors written into parents (issue #174). Deb et al. 2002: survivors
+    # carry their own objectives, rank and crowding into the next generation.
+    @testset "NSGA-II keeps fitpop/ranks/crowding aligned with parents (issue #174)" begin
+        f2(x::AbstractVector) = [x[1]^2, (x[1] - 2)^2]
+        sel_first(fit, N; kwargs...) = collect(1:N)
+        rng3 = StableRNG(123)
+        opts3 = Evolutionary.Options(rng = rng3)
+        method = NSGA2(
+            populationSize = 5, crossoverRate = 0.0,
+            mutationRate = 0.0, selection = sel_first
+        )
+        parents3 = [[0.5], [1.0], [1.5], [-0.5], [-1.0]]
+        N = method.populationSize
+        objfun = Evolutionary.EvolutionaryObjective(f2, first(parents3))
+        state = Evolutionary.initial_state(method, opts3, objfun, parents3)
+
+        # Identity operators + sel_first => offspring copy the current parents,
+        # so the combined fitness before survivor reordering is [F_p F_p].
+        parents_before = [copy(p) for p in parents3]
+        Fp = reduce(hcat, f2.(parents_before))
+        combined = hcat(Fp, Fp)
+        rks = zeros(Int, 2N)
+        cd = zeros(Float64, 2N)
+        fronts = Evolutionary.nondominatedsort!(rks, combined)
+        Evolutionary.crowding_distance!(cd, combined, fronts)
+        @test length(fronts[1]) > N  # truncation branch
+        fitidx = Int[]
+        for fr in fronts
+            if length(fitidx) + length(fr) > N
+                order = sortperm(view(cd, fr), rev = true)
+                append!(fitidx, fr[order[1:(N - length(fitidx))]])
+                break
+            else
+                append!(fitidx, fr)
+            end
+        end
+        @test length(fitidx) == N
+        # Combined population genomes under identity ops: parents then parents
+        allgen = vcat(parents_before, parents_before)
+        expected_parents = allgen[fitidx]
+        expected_fit = combined[:, fitidx]
+        expected_ranks = rks[fitidx]
+        expected_crowding = cd[fitidx]
+
+        Evolutionary.update_state!(
+            objfun, Evolutionary.NoConstraints(), state,
+            parents3, method, opts3, 1
+        )
+
+        @test parents3 == expected_parents
+        @test state.fitpop[:, 1:N] == expected_fit
+        @test state.ranks[1:N] == expected_ranks
+        @test state.crowding[1:N] == expected_crowding
+        for i in 1:N
+            @test state.fitpop[:, i] == f2(parents3[i])
+        end
+        for (ind, fitcol) in zip(state.fittest, eachcol(state.fitness))
+            @test Vector(fitcol) == f2(ind)
+        end
+
+        # Second generation: without realignment, only offspring columns are
+        # re-evaluated and parent-slot objectives stay stale.
+        Evolutionary.update_state!(
+            objfun, Evolutionary.NoConstraints(), state,
+            parents3, method, opts3, 2
+        )
+        for i in 1:N
+            @test state.fitpop[:, i] == f2(parents3[i])
+        end
+        for (ind, fitcol) in zip(state.fittest, eachcol(state.fitness))
+            @test Vector(fitcol) == f2(ind)
+        end
+    end
+
 end
