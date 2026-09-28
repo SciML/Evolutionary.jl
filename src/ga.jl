@@ -101,7 +101,7 @@ function update_state!(objfun, constraints, state, parents::AbstractVector{IT}, 
     fitidxs = sortperm(selfit)
     for i in 1:state.eliteSize
         subs = populationSize + i
-        offspring[subs] = parents[selected[fitidxs[i]]]
+        offspring[subs] = apply!(constraints, copy(parents[selected[fitidxs[i]]]))
     end
 
     # calculate fitness of the population
@@ -132,7 +132,7 @@ function recombine!(
         if rand(rng) < method.crossoverRate
             offspring[i], offspring[j] = method.crossover(p1, p2, rng = rng)
         else
-            offspring[i], offspring[j] = p1, p2
+            offspring[i], offspring[j] = copy(p1), copy(p2)
         end
     end
 

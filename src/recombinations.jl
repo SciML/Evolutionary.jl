@@ -52,9 +52,9 @@ end
 """
     genop(v1, v2)
 
-Returns the same parameter individuals `v1` and `v2` as an offspring pair (GENetic No OPeration).
+Returns copies of the parameter individuals `v1` and `v2` as an offspring pair (GENetic No OPeration).
 """
-genop(v1::T, v2::T; kwargs...) where {T <: AbstractVector} = (v1, v2)
+genop(v1::T, v2::T; kwargs...) where {T <: AbstractVector} = (copy(v1), copy(v2))
 
 # Binary crossovers
 # -----------------
