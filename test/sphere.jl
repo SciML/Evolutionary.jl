@@ -69,4 +69,15 @@ using StableRNGs
     @test sum(x -> x .^ 2, Evolutionary.minimizer(result)) ≈ 0.0 atol = 1.0e-2
     @test length(Evolutionary.minimizer(result)) == N
 
+    # (μ+λ)-ES: the surviving parents are kept, best first
+    m = ES(mutation = (x, s; kwargs...) -> x .- 1.0, μ = 2, ρ = 1, λ = 1, selection = :plus)
+    opts = Evolutionary.Options(rng = rng)
+    population = [[5.0], [0.0]]
+    objfun = Evolutionary.EvolutionaryObjective(sphere, first(population))
+    state = Evolutionary.initial_state(m, opts, objfun, population)
+    Evolutionary.update_state!(objfun, Evolutionary.NoConstraints(), state, population, m, opts, 1)
+    @test first(population) == [0.0]
+    @test state.fitness == sphere.(population)
+    @test issorted(state.fitness)
+
 end
