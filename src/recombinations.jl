@@ -133,6 +133,8 @@ end
     BINX(Cr::Real=0.5)
 
 Returns a uniform (binomial) crossover function, see [Recombination Interface](@ref), function with the probability `Cr` [^2].
+The first offspring takes each gene of the first parent with the probability `Cr`, and the gene at a random position always;
+its other genes come from the second parent, and the second offspring takes the remaining genes.
 
 The crossover probability value must be in unit interval, ``Cr \\in [0,1]``.
 
@@ -146,8 +148,8 @@ function BINX(Cr::Real = 0.5)
         c1 = copy(v1)
         c2 = copy(v2)
         j = rand(rng, 1:l)
-        for i in (((1:l) .+ j .- 2) .% l) .+ 1
-            if rand(rng) <= Cr
+        for i in 1:l
+            if i != j && rand(rng) > Cr
                 vswap!(c1, c2, i)
             end
         end

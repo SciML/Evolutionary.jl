@@ -85,7 +85,7 @@ using StableRNGs
     # Testing: DE
     selections = [:rand => random, :perm => permutation, :rndoff => randomoffset, :best => best]
     mutations = [:exp => EXPX(0.5), :bin => BINX(0.5)]
-    opts = Evolutionary.Options(rng = rng, successive_f_tol = 25)
+    opts = Evolutionary.Options(rng = rng, successive_f_tol = 100)
     @testset "DE settings" for (sn, ss) in selections, (mn, ms) in mutations, n in 1:2
         Random.seed!(rng, 1)
         result = Evolutionary.optimize(
@@ -103,5 +103,21 @@ using StableRNGs
         #println(Evolutionary.minimizer(result))
         test_result(result, N, 1.0e-4)
     end
+
+    # DE/rand/1/bin: each trial vector takes its genes from the mutant (with the
+    # probability Cr) and from its target
+    Np, n = 50, 50
+    x = [fill(sqrt(k + 1.0), n) for k in 1:Np]
+    population = deepcopy(x)
+    m = DE(populationSize = Np, F = 0.5, recombination = BINX(0.9))
+    opts = Evolutionary.Options(rng = rng)
+    objfun = Evolutionary.EvolutionaryObjective(v -> 0.0, first(population))
+    state = Evolutionary.initial_state(m, opts, objfun, population)
+    fill!(state.fitness, 0.0) # every trial replaces its target
+    Evolutionary.update_state!(objfun, Evolutionary.NoConstraints(), state, population, m, opts, 1)
+    target = count(population[i][j] == x[i][1] for i in 1:Np, j in 1:n) / (Np * n)
+    other = count(population[i][j] != x[i][1] && any(population[i][j] == x[k][1] for k in 1:Np) for i in 1:Np, j in 1:n)
+    @test 0.05 < target < 0.15
+    @test other == 0
 
 end

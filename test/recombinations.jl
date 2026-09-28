@@ -76,9 +76,9 @@ using StableRNGs
         v2 = fill(0, 10)
 
         xvr = BINX(0.0)
-        @test first(xvr(v1, v2)) == v1
+        @test count(!iszero, first(xvr(v1, v2))) == 1
         xvr = BINX(1.0)
-        @test last(xvr(v1, v2)) == v1
+        @test first(xvr(v1, v2)) == v1
         xvr = BINX(0.5)
         m1, m2 = xvr(v1, v2)
         @test m1 .+ m2 == v1
