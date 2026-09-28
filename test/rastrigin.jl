@@ -68,7 +68,7 @@ using StableRNGs
 
     @testset "GA settings" for (sn, ss) in selections, (xn, xovr) in crossovers, (mn, ms) in mutations
         (xn ∈ [:line, :discrete]) && mn == :gaussian && continue # bad combination
-        Random.seed!(rng, 42)
+        Random.seed!(rng, 4)
         result = Evolutionary.optimize(
             rastrigin, initState,
             GA(

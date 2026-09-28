@@ -191,4 +191,21 @@ using StableRNGs
         end
     end
 
+    # Offspring that aren't crossed are copies: mutating them leaves the parents,
+    # and the objective values stored for them, unchanged
+    @testset "NSGA-II mutates copies of the parents" begin
+        f3(x) = [Float64(count(x)), Float64(count(!, x))]
+        method = NSGA2(populationSize = 10, crossoverRate = 0.0, mutationRate = 1.0, mutation = flip)
+        opts4 = Evolutionary.Options(rng = StableRNG(1))
+        parents4 = [bitrand(StableRNG(k), 20) for k in 1:10]
+        objfun = Evolutionary.EvolutionaryObjective(f3, first(parents4), zeros(2))
+        state = Evolutionary.initial_state(method, opts4, objfun, parents4)
+        for itr in 1:5
+            Evolutionary.update_state!(objfun, Evolutionary.NoConstraints(), state, parents4, method, opts4, itr)
+        end
+        for i in 1:10
+            @test state.fitpop[:, i] == f3(parents4[i])
+        end
+    end
+
 end
