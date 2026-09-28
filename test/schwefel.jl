@@ -27,7 +27,7 @@ using StableRNGs
     opts = Evolutionary.Options(rng = rng)
     λ = 14
     Random.seed!(rng, 42)
-    result = Evolutionary.optimize(schwefel, () -> rand(rng, N), CMAES(lambda = λ, c_1 = 0.05), opts)
+    result = Evolutionary.optimize(schwefel, () -> rand(rng, N), CMAES(lambda = λ), opts)
     println("($(λ >> 1),$λ)-CMA-ES => F: $(minimum(result)), C: $(Evolutionary.iterations(result))")
     @test Evolutionary.converged(result)
     @test Evolutionary.minimizer(result) ≈ zeros(N) atol = 1.0e-4

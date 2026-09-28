@@ -78,6 +78,28 @@ using StableRNGs
     @test Evolutionary.minimizer(result) |> sum ≈ 1.0 atol = 0.1
     @test all(0.0 <= x + 0.01 && x - 0.01 <= 0.5 for x in abs.(Evolutionary.minimizer(result)))
 
+    # CMA-ES with its default parameters, 10 dimensions
+    rosenbrock10(x::AbstractVector) = sum(100 * (x[i + 1] - x[i]^2)^2 + (1 - x[i])^2 for i in 1:(length(x) - 1))
+    Random.seed!(rng, 42)
+    opts = Evolutionary.Options(rng = rng, iterations = 3000)
+    result = Evolutionary.optimize(rosenbrock10, BoxConstraints(-5.0, 10.0, 10), CMAES(mu = 5, lambda = 10, sigma0 = 4.5), opts)
+    println("(5,10)-CMA-ES [10 dimensions] => F: $(minimum(result)), C: $(Evolutionary.iterations(result))")
+    test_result(result, 10, 1.0e-6)
+
+    # CMA-ES under random selection: the step size neither collapses nor explodes,
+    # and the covariance matrix stays symmetric
+    Random.seed!(rng, 42)
+    m = CMAES(mu = 5, lambda = 10, sigma0 = 1.0)
+    opts = Evolutionary.Options(rng = rng)
+    objfun = Evolutionary.EvolutionaryObjective(x -> 0.0, zeros(10))
+    population = [zeros(10) for _ in 1:m.μ]
+    state = Evolutionary.initial_state(m, opts, objfun, population)
+    for itr in 1:100
+        Evolutionary.update_state!(objfun, Evolutionary.NoConstraints(), state, population, m, opts, itr)
+    end
+    @test 0.01 < state.σ < 100
+    @test state.C ≈ state.C'
+
     # Testing: GA
     Random.seed!(rng, 42)
     opts = Evolutionary.Options(rng = rng)
