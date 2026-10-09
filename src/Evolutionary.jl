@@ -1,5 +1,5 @@
 module Evolutionary
-using LinearAlgebra: Diagonal, Symmetric, diag, diagm, eigen!, norm
+using LinearAlgebra: Diagonal, Symmetric, diag, diagm, eigen, norm
 using Statistics: mean
 using Base: @kwdef
 using UnPack: @unpack

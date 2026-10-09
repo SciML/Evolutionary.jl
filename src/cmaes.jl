@@ -154,7 +154,7 @@ function update_state!(
     fitoff = fill(Inf, λ)
 
     B, D = try
-        F = eigen!(Symmetric(state.C))
+        F = eigen(Symmetric(state.C))
         F.vectors, Diagonal(sqrt.(max.(0, F.values)))
     catch ex
         @error "Break on eigendecomposition: $ex: $(state.C)"
@@ -186,17 +186,18 @@ function update_state!(
     parent += (cₘ * σ) .* ȳ  #  forming recombinant parent for next generation
     # update evolution paths
     state.s_σ .= (1 - c_σ) .* state.s_σ .+ sqrt(μ_eff * c_σ * (2 - c_σ)) * (B * z̄)
-    h_σ = norm(state.s_σ) / N / (1 - (1 - c_σ)^(2 * itr / λ)) < (2 + 4 / (N + 1))
+    h_σ = sum(abs2, state.s_σ) / N / (1 - (1 - c_σ)^(2 * itr)) < (2 + 4 / (N + 1))
     state.s = (1 - c_c) * state.s + (h_σ * sqrt(μ_eff * c_c * (2 - c_c))) * ȳ
     # perform rank-one update
     rank_1 = c_1 .* state.s * state.s'
-    # perform rank-μ update
-    rank_μ = c_μ * sum((w ≥ 0 ? 1 : N / norm(B * zi)^2) * w * (zi * zi') for (w, zi) in zip(w, eachcol(z_λ)))
+    # perform rank-μ update with the steps y = B * D * z
+    y_λ = B * D * z_λ
+    rank_μ = c_μ * sum((w ≥ 0 ? 1 : N / norm(B * zi)^2) * w * (yi * yi') for (w, zi, yi) in zip(w, eachcol(z_λ), eachcol(y_λ)))
     # update covariance
     c1a = c_1 * (1 - (1 - h_σ) * c_c * (2 - c_c))
     state.C .= (1 - c1a - c_μ * sum(w)) .* state.C + rank_1 + rank_μ
     # adapt step-size σ
-    state.σ = σ * exp(min(1, (c_σ / d_σ) * (norm(state.s_σ) / N - 1) / 2))
+    state.σ = σ * exp(min(1, (c_σ / d_σ) * (sum(abs2, state.s_σ) / N - 1) / 2))
 
     state.fittest = population[1]
     state.parent = reshape(parent, parentshape...)
