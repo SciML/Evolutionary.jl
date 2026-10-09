@@ -125,15 +125,9 @@ function update_state!(objfun, constraints, state, population::AbstractVector{IT
     # Select new parent population
     if selection == :plus
         idxs = sortperm(vcat(state.fitness, fitoff))[1:μ]
-        skip = idxs[idxs .<= μ]
-        for i in 1:μ
-            if idxs[i] ∉ skip
-                ii = idxs[i] - μ
-                population[i] = offspring[ii]
-                state.strategies[i] = stgoff[ii]
-                state.fitness[i] = fitoff[ii]
-            end
-        end
+        population .= vcat(population, offspring)[idxs]
+        state.strategies .= vcat(state.strategies, stgoff)[idxs]
+        state.fitness .= vcat(state.fitness, fitoff)[idxs]
     else
         idxs = sortperm(fitoff)[1:μ]
         for (i, j) in enumerate(idxs)
