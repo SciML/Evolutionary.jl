@@ -68,8 +68,8 @@ function update_state!(objfun, constraints, state, population::AbstractVector{IT
         targets = randexcl(rng, 1:Np, [i], 2 * n)
         offspring[i] = differentiation(offspring[i], @view population[targets]; F = F)
 
-        # recombination
-        offspring[i], _ = method.recombination(offspring[i], base, rng = rng)
+        # recombination with the target vector
+        offspring[i], _ = method.recombination(offspring[i], population[i], rng = rng)
 
         # apply constraints
         apply!(constraints, offspring[i])
