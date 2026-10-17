@@ -95,11 +95,11 @@ pkg> add Evolutionary
 [travis-img]: https://travis-ci.org/wildart/Evolutionary.jl.svg?branch=master
 [travis-url]: https://travis-ci.org/wildart/Evolutionary.jl
 
-[CI-img]: https://github.com/wildart/Evolutionary.jl/actions/workflows/CI.yml/badge.svg
-[CI-url]: https://github.com/wildart/Evolutionary.jl/actions/workflows/CI.yml
+[CI-img]: https://github.com/SciML/Evolutionary.jl/actions/workflows/Tests.yml/badge.svg
+[CI-url]: https://github.com/SciML/Evolutionary.jl/actions/workflows/Tests.yml
 
-[coverage-img]: https://img.shields.io/coveralls/wildart/Evolutionary.jl.svg
-[coverage-url]: https://coveralls.io/r/wildart/Evolutionary.jl?branch=master
+[coverage-img]: https://codecov.io/gh/SciML/Evolutionary.jl/branch/master/graph/badge.svg
+[coverage-url]: https://codecov.io/gh/SciML/Evolutionary.jl
 
 [issues-url]: https://github.com/wildart/Evolutionary.jl/issues
 
