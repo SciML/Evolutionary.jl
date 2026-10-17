@@ -87,10 +87,10 @@ pkg> add Evolutionary
 
 
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
-[docs-dev-url]: https://wildart.github.io/Evolutionary.jl/dev
+[docs-dev-url]: https://docs.sciml.ai/Evolutionary/dev/
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
-[docs-stable-url]: https://wildart.github.io/Evolutionary.jl/stable
+[docs-stable-url]: https://docs.sciml.ai/Evolutionary/stable/
 
 [travis-img]: https://travis-ci.org/wildart/Evolutionary.jl.svg?branch=master
 [travis-url]: https://travis-ci.org/wildart/Evolutionary.jl
