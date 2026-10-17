@@ -78,13 +78,42 @@ using StableRNGs
     @test Evolutionary.minimizer(result) |> sum ≈ 1.0 atol = 0.1
     @test all(0.0 <= x + 0.01 && x - 0.01 <= 0.5 for x in abs.(Evolutionary.minimizer(result)))
 
-    # CMA-ES with its default parameters, 10 dimensions
+    # CMA-ES in a 10-D box. The 10-D Rosenbrock function has a local minimum near
+    # (-1, 1, …, 1) that the default (5,10) population reaches in ~9% of runs, so
+    # the population is large enough to reach the global minimum reliably.
     rosenbrock10(x::AbstractVector) = sum(100 * (x[i + 1] - x[i]^2)^2 + (1 - x[i])^2 for i in 1:(length(x) - 1))
     Random.seed!(rng, 42)
     opts = Evolutionary.Options(rng = rng, iterations = 3000)
-    result = Evolutionary.optimize(rosenbrock10, BoxConstraints(-5.0, 10.0, 10), CMAES(mu = 5, lambda = 10, sigma0 = 4.5), opts)
-    println("(5,10)-CMA-ES [10 dimensions] => F: $(minimum(result)), C: $(Evolutionary.iterations(result))")
+    result = Evolutionary.optimize(rosenbrock10, BoxConstraints(-5.0, 10.0, 10), CMAES(mu = 30, lambda = 60, sigma0 = 4.5), opts)
+    println("(30,60)-CMA-ES [10 dimensions] => F: $(minimum(result)), C: $(Evolutionary.iterations(result))")
     test_result(result, 10, 1.0e-6)
+
+    # CMA-ES with a step size larger than the box: the clipped offspring shrink it
+    Random.seed!(rng, 42)
+    m = CMAES(mu = 5, lambda = 10, sigma0 = 100.0)
+    opts = Evolutionary.Options(rng = rng)
+    objfun = Evolutionary.EvolutionaryObjective(rosenbrock10, zeros(10))
+    population = [rand(rng, 10) for _ in 1:m.μ]
+    state = Evolutionary.initial_state(m, opts, objfun, population)
+    for itr in 1:100
+        Evolutionary.update_state!(objfun, BoxConstraints(-5.0, 10.0, 10), state, population, m, opts, itr)
+    end
+    @test state.σ < 15
+
+    # CMA-ES offspring repaired onto the parent keep the covariance matrix finite
+    for (dim, initial, constraints) in (
+            (1, zeros(1), BoxConstraints(0.0, 1.0, 1)),
+            (3, fill(0.3, 3), BoxConstraints(fill(0.3, 3), fill(0.3, 3))),
+        )
+        Random.seed!(rng, 42)
+        m = CMAES(mu = 5, lambda = 10)
+        opts = Evolutionary.Options(rng = rng)
+        objfun = Evolutionary.EvolutionaryObjective(x -> sum(abs2, x .- 0.5), zeros(dim))
+        population = [copy(initial) for _ in 1:m.μ]
+        state = Evolutionary.initial_state(m, opts, objfun, population)
+        Evolutionary.update_state!(objfun, constraints, state, population, m, opts, 1)
+        @test all(isfinite, state.C)
+    end
 
     # CMA-ES under random selection: the step size neither collapses nor explodes,
     # and the covariance matrix stays symmetric
